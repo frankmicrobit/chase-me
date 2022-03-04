@@ -1,13 +1,51 @@
-input.onButtonPressed(Button.A, function () {
-    MyPrevX = MyX
-    MyPrevY = MyY
-    MyX += -1
-    radio.sendValue("X", MyX)
-    PlotMe()
-    doColitionDetect(true)
-})
+function ResetGame () {
+    basic.clearScreen()
+    MyX = 0
+    MyY = 0
+    OtherX = 4
+    OtherY = 4
+    MyPrevX = -1
+    MyPrevY = -1
+    OtherPrevX = 5
+    OtherPrevY = 5
+    for (let index = 0; index <= 4; index++) {
+        basic.showNumber(4 - index)
+        basic.pause(100)
+    }
+    radio.sendValue("X", MyY)
+    radio.sendValue("Y", MyY)
+    radio.sendValue("OtherX", OtherX)
+    radio.sendValue("OtherY", OtherY)
+}
+function ChangeOtherY (num: number) {
+    OtherY += num
+    if (OtherY < 0) {
+        OtherX = 0
+    }
+    if (OtherY > 4) {
+        MyX = 4
+    }
+}
+function ChangeMyX (num: number) {
+    MyX += num
+    if (MyX < 0) {
+        MyX = 0
+    }
+    if (MyX > 4) {
+        MyX = 4
+    }
+}
+function ChangeOtherX (num: number) {
+    OtherX += num
+    if (OtherX < 0) {
+        OtherX = 0
+    }
+    if (MyX > 4) {
+        MyX = 4
+    }
+}
 function PlotMe () {
-    if (MyPrevX == YourX && MyPrevY == YourY) {
+    if (MyPrevX == OtherX && MyPrevY == OtherY) {
         led.plotBrightness(MyPrevX, MyPrevY, 1)
     } else {
         led.unplot(MyPrevX, MyPrevY)
@@ -15,12 +53,15 @@ function PlotMe () {
     led.plotBrightness(MyX, MyY, 255)
 }
 function doColitionDetect (IsMe: boolean) {
-    if (MyX == YourX && MyY == YourY) {
+    LasActive = true
+    if (MyX == OtherX && MyY == OtherY) {
         if (IsMe) {
             basic.showIcon(IconNames.Heart)
         } else {
             basic.showIcon(IconNames.Sad)
         }
+        basic.pause(1000)
+        ResetGame()
         basic.pause(200)
         basic.clearScreen()
         PlotYou()
@@ -28,77 +69,92 @@ function doColitionDetect (IsMe: boolean) {
     }
 }
 input.onButtonPressed(Button.AB, function () {
-    basic.clearScreen()
-    PlotYou()
-    PlotMe()
+    ResetGame()
 })
 function PlotYou () {
-    if (YourPrevX == MyX && YourPrevY == MyY) {
-        led.plotBrightness(YourPrevX, YourPrevY, 1)
+    if (OtherPrevX == MyX && OtherPrevY == MyY) {
+    	
     } else {
-        led.unplot(YourPrevX, YourPrevY)
+        led.unplot(OtherPrevX, OtherPrevY)
     }
-    led.plotBrightness(YourX, YourY, 1)
+    led.plotBrightness(OtherX, OtherY, 1)
 }
-input.onButtonPressed(Button.B, function () {
+function SaveMyPrevPos () {
     MyPrevX = MyX
     MyPrevY = MyY
-    MyX += 1
-    radio.sendValue("X", MyX)
-    PlotMe()
-    doColitionDetect(true)
-})
+}
 radio.onReceivedValue(function (name, value) {
     if (name == "X") {
-        YourPrevX = YourX
-        YourX = value
-        PlotYou()
-        PlotMe()
-        doColitionDetect(false)
+        SaveYourPrevPos()
+        OtherX = value
     }
     if (name == "Y") {
-        YourPrevY = YourY
-        YourY = value
-        PlotYou()
-        PlotMe()
-        doColitionDetect(false)
+        SaveYourPrevPos()
+        OtherY = value
     }
+    if (name == "OtherX") {
+        SaveMyPrevPos()
+        MyX = value
+    }
+    if (name == "OtherY") {
+        SaveMyPrevPos()
+        MyY = value
+    }
+    LasActive = false
 })
-let Aks = 0
-let YourPrevY = 0
-let YourPrevX = 0
+function SaveYourPrevPos () {
+    OtherPrevX = OtherX
+    OtherPrevY = OtherY
+}
+function ChangeMyY (num: number) {
+    MyY += num
+    if (MyY < 0) {
+        MyY = 0
+    }
+    if (MyY > 4) {
+        MyY = 4
+    }
+}
+let AksY = 0
+let AksX = 0
+let LasActive = false
+let OtherPrevY = 0
+let OtherPrevX = 0
 let MyPrevY = 0
 let MyPrevX = 0
-let YourY = 0
-let YourX = 0
+let OtherY = 0
+let OtherX = 0
 let MyY = 0
 let MyX = 0
 basic.clearScreen()
 radio.setGroup(1)
-MyX = 0
-MyY = 0
-YourX = 0
-YourY = 0
-MyPrevX = 0
-MyPrevY = 0
-YourPrevX = 0
-YourPrevY = 0
+loops.everyInterval(50, function () {
+    PlotYou()
+    PlotMe()
+    doColitionDetect(LasActive)
+})
 basic.forever(function () {
-    Aks = input.acceleration(Dimension.Y)
-    if (Math.abs(Aks) > 100) {
-        if (Aks > 100) {
-            MyPrevX = MyX
-            MyY += 1
-            PlotMe()
-            doColitionDetect(true)
+    AksX = input.acceleration(Dimension.X)
+    AksY = input.acceleration(Dimension.Y)
+    if (Math.abs(AksX) > 500) {
+        SaveMyPrevPos()
+        if (AksX > 100) {
+            ChangeMyX(1)
         }
-        if (Aks < -100) {
-            MyPrevY = MyY
-            MyY += -1
-            PlotMe()
-            doColitionDetect(true)
+        if (AksX < -100) {
+            ChangeMyX(-1)
+        }
+        radio.sendValue("X", MyX)
+    }
+    if (Math.abs(AksY) > 500) {
+        SaveMyPrevPos()
+        if (AksY > 100) {
+            ChangeMyY(1)
+        }
+        if (AksY < -100) {
+            ChangeMyY(-1)
         }
         radio.sendValue("Y", MyY)
-        basic.pause(500)
     }
+    basic.pause(300)
 })
