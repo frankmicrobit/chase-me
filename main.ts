@@ -1,5 +1,6 @@
 input.onButtonPressed(Button.A, function () {
     MyPrevX = MyX
+    MyPrevY = MyY
     MyX += -1
     radio.sendValue("X", MyX)
     PlotMe()
@@ -32,13 +33,16 @@ input.onButtonPressed(Button.AB, function () {
     PlotMe()
 })
 function PlotYou () {
-    if (YourPrevX != MyX || YourPrevY != MyY) {
+    if (YourPrevX == MyX && YourPrevY == MyY) {
+        led.plotBrightness(YourPrevX, YourPrevY, 1)
+    } else {
         led.unplot(YourPrevX, YourPrevY)
     }
     led.plotBrightness(YourX, YourY, 1)
 }
 input.onButtonPressed(Button.B, function () {
     MyPrevX = MyX
+    MyPrevY = MyY
     MyX += 1
     radio.sendValue("X", MyX)
     PlotMe()
@@ -55,8 +59,12 @@ radio.onReceivedValue(function (name, value) {
     if (name == "Y") {
         YourPrevY = YourY
         YourY = value
+        PlotYou()
+        PlotMe()
+        doColitionDetect(false)
     }
 })
+let Aks = 0
 let YourPrevY = 0
 let YourPrevX = 0
 let MyPrevY = 0
@@ -71,12 +79,26 @@ MyX = 0
 MyY = 0
 YourX = 0
 YourY = 0
-MyPrevX = -1
+MyPrevX = 0
 MyPrevY = 0
-YourPrevX = -1
+YourPrevX = 0
 YourPrevY = 0
 basic.forever(function () {
-    if (true) {
-    	
+    Aks = input.acceleration(Dimension.Y)
+    if (Math.abs(Aks) > 100) {
+        if (Aks > 100) {
+            MyPrevX = MyX
+            MyY += 1
+            PlotMe()
+            doColitionDetect(true)
+        }
+        if (Aks < -100) {
+            MyPrevY = MyY
+            MyY += -1
+            PlotMe()
+            doColitionDetect(true)
+        }
+        radio.sendValue("Y", MyY)
+        basic.pause(500)
     }
 })
