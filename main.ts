@@ -12,18 +12,18 @@ function ResetGame () {
         basic.showNumber(4 - index)
         basic.pause(100)
     }
-    radio.sendValue("X", MyY)
-    radio.sendValue("Y", MyY)
-    radio.sendValue("OtherX", OtherX)
-    radio.sendValue("OtherY", OtherY)
+    basic.clearScreen()
 }
 function ChangeOtherY (num: number) {
+    if (num != 0) {
+        OtherPrevY = OtherY
+    }
     OtherY += num
     if (OtherY < 0) {
         OtherX = 0
     }
     if (OtherY > 4) {
-        MyX = 4
+        OtherY = 4
     }
 }
 function ChangeMyX (num: number) {
@@ -40,8 +40,11 @@ function ChangeOtherX (num: number) {
     if (OtherX < 0) {
         OtherX = 0
     }
-    if (MyX > 4) {
-        MyX = 4
+    if (OtherX > 4) {
+        OtherX = 4
+    }
+    if (num != 0) {
+        OtherPrevX = OtherX
     }
 }
 function PlotMe () {
@@ -94,6 +97,7 @@ radio.onReceivedValue(function (name, value) {
     }
     if (name == "OtherX") {
         SaveMyPrevPos()
+        index = 0
         MyX = value
     }
     if (name == "OtherY") {
@@ -107,6 +111,9 @@ function SaveYourPrevPos () {
     OtherPrevY = OtherY
 }
 function ChangeMyY (num: number) {
+    if (num != 0) {
+        OtherPrevY = OtherY
+    }
     MyY += num
     if (MyY < 0) {
         MyY = 0
@@ -117,6 +124,7 @@ function ChangeMyY (num: number) {
 }
 let AksY = 0
 let AksX = 0
+let index = 0
 let LasActive = false
 let OtherPrevY = 0
 let OtherPrevX = 0
@@ -127,7 +135,13 @@ let OtherX = 0
 let MyY = 0
 let MyX = 0
 basic.clearScreen()
-radio.setGroup(1)
+loops.everyInterval(1000, function () {
+    if (Math.randomBoolean()) {
+        ChangeOtherX(randint(-1, 1) - 0)
+    } else {
+        ChangeOtherY(randint(-1, 1) - 0)
+    }
+})
 loops.everyInterval(50, function () {
     PlotYou()
     PlotMe()
@@ -144,7 +158,6 @@ basic.forever(function () {
         if (AksX < -100) {
             ChangeMyX(-1)
         }
-        radio.sendValue("X", MyX)
     }
     if (Math.abs(AksY) > 500) {
         SaveMyPrevPos()
@@ -154,7 +167,6 @@ basic.forever(function () {
         if (AksY < -100) {
             ChangeMyY(-1)
         }
-        radio.sendValue("Y", MyY)
     }
     basic.pause(300)
 })
